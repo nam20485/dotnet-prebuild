@@ -63,4 +63,6 @@ RUN npm --version && \
     node --version && \
     gh --version && \
     gcloud --version && \
-    firebase --version
+    firebase --version && \
+    terraform --version && \
+    cdktf --version
