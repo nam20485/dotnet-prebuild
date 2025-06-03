@@ -22,19 +22,10 @@ RUN dotnet workload update
 
 # node / npm
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install -y nodejs \
+    apt-get install -y -q nodejs \
     build-essential && \
     node --version && \ 
     npm --version
-
-# Add Google Cloud SDK repository
-# Install Google Cloud CLI
-# RUN bash -c 'echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list' && \
-#     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-#     apt-get update -y && \
-#     apt-get install -y -q --no-install-recommends \
-#         google-cloud-cli \ 
-#         google-cloud-cli-enterprise-certificate-proxy google-cloud-cli-app-engine-java google-cloud-cli-bigtable-emulator google-cloud-cli-app-engine-python-extras google-cloud-cli-cbt google-cloud-cli-minikube google-cloud-cli-anthos-auth google-cloud-cli-datastore-emulator google-cloud-cli-app-engine-go kubectl google-cloud-cli google-cloud-cli-skaffold google-cloud-cli-nomos google-cloud-cli-pubsub-emulator google-cloud-cli-local-extract google-cloud-cli-spanner-migration-tool google-cloud-cli-docker-credential-gcr google-cloud-cli-config-connector google-cloud-cli-spanner-emulator google-cloud-cli-package-go-module google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-grpc google-cloud-cli-firestore-emulator google-cloud-cli-cloud-run-proxy google-cloud-cli-kubectl-oidc google-cloud-cli-istioctl google-cloud-cli-app-engine-python google-cloud-cli-cloud-build-local google-cloud-cli-kpt google-cloud-cli-anthoscli google-cloud-cli-terraform-tools google-cloud-cli-log-streaming google-cloud-cli-managed-flink-client
 
 # gcloud CLI
 RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
@@ -48,13 +39,24 @@ ENV PATH=$PATH:/usr/local/gcloud/google-cloud-sdk/bin
 # install firebase CLI
 RUN npm install -g firebase-tools@latest
 
+# GitHub CLI
 RUN mkdir -p -m 755 /etc/apt/keyrings \
-    && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-	&& sudo apt update \
-	&& sudo apt install gh -y
+    && out=$(mktemp) && curl -fsSL -o $out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && cat $out | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+	&& chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg\
+	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+	&& apt-get update \
+	&& apt-get install gh -y -q --no-install-recommends
+
+# terraform
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
+    apt-get update && \
+    apt-get install -y -q --no-install-recommends \
+        terraform
+
+# terraform CDK for C#
+RUN npm install --global cdktf-cli@latest
 
 # check CLI commands working
 RUN npm --version && \
