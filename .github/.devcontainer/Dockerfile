@@ -9,12 +9,17 @@ RUN apt-get update -y && \
         apt-transport-https \
         ca-certificates \
         gnupg \ 
-        curl && \
+        curl \
+        software-properties-common && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN dotnet workload install wasm-tools
-RUN dotnet workload update
+# Add .NET global tools path
+ENV PATH $PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools
+
+# instal;l wasm-tools and aspire workloads
+RUN dotnet workload update && \
+    dotnet workload install wasm-tools aspire
 
 #RUN apt-get install -y -q --no-install-recommends python3
 
