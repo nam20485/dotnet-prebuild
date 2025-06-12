@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/dotnet:1.3.7-9.0-bookworm-slim
+FROM mcr.microsoft.com/devcontainers/dotnet:1.5.1-9.0-bookworm-slim
 
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
@@ -15,7 +15,7 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Add .NET global tools path
-ENV PATH $PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools
+ENV PATH=$PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools
 
 # instal;l wasm-tools and aspire workloads
 RUN dotnet workload update && \
@@ -42,7 +42,7 @@ ENV PATH=$PATH:/usr/local/gcloud/google-cloud-sdk/bin
 #RUN gcloud components update
 
 # install firebase CLI
-RUN npm install -g firebase-tools@latest
+RUN npm install -g firebase-tools@14.6.0
 
 # GitHub CLI
 RUN mkdir -p -m 755 /etc/apt/keyrings \
@@ -61,7 +61,7 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/sh
         terraform
 
 # terraform CDK for C#
-RUN npm install --global cdktf-cli@latest
+RUN npm install --global cdktf-cli@0.21.0
 
 # check CLI commands working
 RUN npm --version && \
