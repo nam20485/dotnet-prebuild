@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/dotnet:1.5.1-9.0-bookworm-slim
+FROM mcr.microsoft.com/devcontainers/dotnet:1.5.1-9.0-noble
 
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
