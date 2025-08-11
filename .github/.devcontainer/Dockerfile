@@ -22,7 +22,7 @@ RUN dotnet workload update && \
     dotnet workload install wasm-tools aspire
 
 # aspire templates
-RUN dotnet new install Aspire.ProjectTemplates
+#RUN dotnet new install Aspire.ProjectTemplates
 # avalonia templates
 RUN dotnet new install Avalonia.Templates
 # aspire cli
@@ -162,4 +162,5 @@ RUN npm --version && \
     gcloud --version && \
     firebase --version && \
     terraform --version && \
-    cdktf --version
+    cdktf --version \
+    && ansible --version
