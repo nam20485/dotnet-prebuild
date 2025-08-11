@@ -59,9 +59,7 @@
 				"aliasadidev.nugetpackagemanagergui",
 				//    "pspester.pester-test",
 				//    "unoplatform.vscode"
-				"donjayamanne.githistory",
-				"github.vscode-github-actions",
-				"googlecloudtools.cloudcode"
+				"donjayamanne.githistory"
 			]
 		}
 	},

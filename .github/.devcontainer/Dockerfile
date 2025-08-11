@@ -26,9 +26,13 @@ RUN dotnet new install Aspire.ProjectTemplates
 # avalonia templates
 RUN dotnet new install Avalonia.Templates
 # aspire cli
-RUN curl -sSL https://aspire.dev/install.sh | bash
+# Download Aspire install script, verify checksum, then execute
+RUN curl -sSL -o /tmp/aspire-install.sh https://aspire.dev/install.sh && \
+    echo "EXPECTED_SHA256  /tmp/aspire-install.sh" | sha256sum -c - && \
+    bash /tmp/aspire-install.sh && \
+    rm /tmp/aspire-install.sh
 
-# powerhsell core
+# powershell core
 RUN apt-get update -y && \
     apt-get install -y -q --no-install-recommends wget gpg apt-transport-https && \
     wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb && \
@@ -41,20 +45,27 @@ RUN apt-get update -y && \
 # nerd fonts
 #RUN & ([scriptblock]::Create((iwr 'https://to.loredo.me/Install-NerdFont.ps1'))) -Confirm:$false -Name hack, heavy-data
 
-# Install nvm (Node Version Manager) and default to latest LTS Node version
+# Install nvm (Node Version Manager) with SHA256 verification
+ARG NVM_VERSION=v0.39.7
+# Replace this with the real SHA256 of the install.sh for the above version
+ARG NVM_INSTALL_SHA256_V0_97=8E45FA547F428E9196A5613EFAD3BFA4D4608B74CA870F930090598F5AF5F643
 ENV NVM_DIR=/usr/local/nvm
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN mkdir -p "$NVM_DIR" \
-    && curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | NVM_DIR=$NVM_DIR bash \
-    && source $NVM_DIR/nvm.sh \
+RUN set -euo pipefail \
+    && curl -fsSL -o /tmp/nvm-install.sh https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh \
+    && echo "${NVM_INSTALL_SHA256_V0_97}  /tmp/nvm-install.sh" | sha256sum -c - \
+    && NVM_DIR=$NVM_DIR bash /tmp/nvm-install.sh \
+    && source "$NVM_DIR/nvm.sh" \
     && nvm install --lts \
     && nvm alias default 'lts/*' \
-    && NODE_VERSION=$(nvm current) \
-    && ln -s $NVM_DIR/versions/node/$NODE_VERSION/bin/node /usr/local/bin/node \
-    && ln -s $NVM_DIR/versions/node/$NODE_VERSION/bin/npm /usr/local/bin/npm \
-    && ln -s $NVM_DIR/versions/node/$NODE_VERSION/bin/npx /usr/local/bin/npx \
-    && printf 'export NVM_DIR="/usr/local/nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n' > /etc/profile.d/nvm.sh \
-    && printf 'export NVM_DIR="/usr/local/nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n' >> /etc/bash.bashrc
+    && NODE_VERSION="$(nvm current)" \
+    && ln -s "$NVM_DIR/versions/node/${NODE_VERSION}/bin/node" /usr/local/bin/node \
+    && ln -s "$NVM_DIR/versions/node/${NODE_VERSION}/bin/npm" /usr/local/bin/npm \
+    && ln -s "$NVM_DIR/versions/node/${NODE_VERSION}/bin/npx" /usr/local/bin/npx \
+    && printf 'export NVM_DIR="%s"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n' "$NVM_DIR" > /etc/profile.d/nvm.sh \
+    && cat /etc/profile.d/nvm.sh >> /etc/bash.bashrc \
+    && rm -f /tmp/nvm-install.sh
 SHELL ["/bin/bash", "-c"]
 
 ### We don't need to install Node.js and npm separately since we're using nvm
@@ -66,7 +77,13 @@ SHELL ["/bin/bash", "-c"]
 #     npm --version
 
 # install bun
-ENV BUN_INSTALL=/usr/local/bun
+RUN curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh && \
+    curl -fsSL https://bun.sh/install.sh.sha256 -o /tmp/bun-install.sh.sha256 && \
+    sha256sum -c /tmp/bun-install.sh.sha256 && \
+    bash /tmp/bun-install.sh && \
+    ln -s /usr/local/bun/bin/bun /usr/local/bin/bun && \
+    bun --version && \
+    rm /tmp/bun-install.sh /tmp/bun-install.sh.sha256
 ENV PATH=$PATH:/usr/local/bun/bin
 RUN curl -fsSL https://bun.sh/install | bash && \
     ln -s /usr/local/bun/bin/bun /usr/local/bin/bun && \
