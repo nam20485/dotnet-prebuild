@@ -2,9 +2,13 @@
 name: Pre-build dev container image
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main  
+  workflow_run:
+    workflows: [Publish Docker]
+    types:
+      - completed
 
 env:
   REGISTRY: ghcr.io

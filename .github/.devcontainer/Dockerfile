@@ -8,7 +8,7 @@ RUN apt-get update -y && \
     build-essential \
     apt-transport-https \
     ca-certificates \
-    gnupg \ 
+    gnupg2 \
     curl \
     software-properties-common && \
     apt-get clean && \
@@ -55,7 +55,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -euo pipefail \
     && curl -fsSL -o /tmp/nvm-install.sh https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh \
     && echo "${NVM_INSTALL_SHA256_V0_97}  /tmp/nvm-install.sh" | sha256sum -c - \
-    && NVM_DIR=$NVM_DIR bash /tmp/nvm-install.sh \
+    && NVM_DIR="$NVM_DIR" bash /tmp/nvm-install.sh \
     && source "$NVM_DIR/nvm.sh" \
     && nvm install --lts \
     && nvm alias default 'lts/*' \
@@ -107,7 +107,7 @@ RUN npm install -g firebase-tools@14.6.0
 # GitHub CLI
 RUN mkdir -p -m 755 /etc/apt/keyrings \
     && out=$(mktemp) && curl -fsSL -o $out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    && cat $out | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && cat "$out" | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg\
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt-get update \
@@ -149,6 +149,11 @@ RUN apt-get update -y && apt-get install -y -q --no-install-recommends python3-p
     printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible-galaxy)"; fi\n' >> /etc/bash.bashrc && \
     printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible-lint)"; fi\n' >> /etc/bash.bashrc
 
+# install uv
+ADD https://astral.sh/uv/0.8.17/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
+
 # LLM agents?
 # gemini CLI
 # augment
@@ -163,4 +168,5 @@ RUN npm --version && \
     firebase --version && \
     terraform --version && \
     cdktf --version \
-    && ansible --version
+    && ansible --version \
+    && uv
