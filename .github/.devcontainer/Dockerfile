@@ -13,8 +13,8 @@ RUN apt-get update -y && \
     curl \
     git \
     gnupg \
-    unzip \
     software-properties-common \
+    unzip \
     xz-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -75,8 +75,9 @@ RUN curl -fsSL https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz
 # Installing the package
 RUN mkdir -p /usr/local/gcloud \
     && tar -C /usr/local/gcloud -xzf /tmp/google-cloud-sdk.tar.gz \
-    && /usr/local/gcloud/google-cloud-sdk/install.sh --quiet
-ENV PATH=$PATH:/usr/local/gcloud/google-cloud-sdk/bin
+    && /usr/local/gcloud/google-cloud-sdk/install.sh --quiet \
+    && ln -sf /usr/local/gcloud/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
+ENV PATH="/usr/local/gcloud/google-cloud-sdk/bin:$PATH"
 #RUN gcloud components update
 # beta components
 RUN /usr/local/gcloud/google-cloud-sdk/bin/gcloud components install beta --quiet && \
@@ -96,12 +97,13 @@ RUN mkdir -p -m 755 /etc/apt/keyrings \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # terraform
-RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
-    apt-get update && \
-    apt-get install -y -q --no-install-recommends \
-    terraform && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg; \
+    . /etc/os-release; CODENAME=${UBUNTU_CODENAME:-$VERSION_CODENAME}; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${CODENAME} main" > /etc/apt/sources.list.d/hashicorp.list; \
+    apt-get update; \
+    apt-get install -y -q --no-install-recommends terraform; \
+    apt-get clean; rm -rf /var/lib/apt/lists/*
 
 # terraform CDK for C#
 RUN npm install --global cdktf-cli@0.21.0
