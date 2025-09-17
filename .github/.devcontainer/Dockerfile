@@ -20,18 +20,18 @@ RUN apt-get update -y && \
 # Add .NET global tools path
 ENV PATH=$PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools
 
-# install wasm-tools and aspire workloads
+# install wasm-tools workload
 RUN dotnet workload update && \
-    dotnet workload install wasm-tools aspire
+    dotnet workload install wasm-tools
 
 # aspire templates
 #RUN dotnet new install Aspire.ProjectTemplates
 # avalonia templates
 RUN dotnet new install Avalonia.Templates
 # aspire cli
-# Download Aspire install script, verify checksum, then execute
-ADD https://aspire.dev/install.sh /tmp/aspire-install.sh
-RUN chmod +x /tmp/aspire-install.sh && \
+# Download Aspire install script and execute
+RUN curl -fsSL -o /tmp/aspire-install.sh https://aspire.dev/install.sh && \
+    chmod +x /tmp/aspire-install.sh && \
     bash /tmp/aspire-install.sh && \
     rm /tmp/aspire-install.sh
 
@@ -97,19 +97,21 @@ RUN npm install -g firebase-tools@14.6.0
 
 # GitHub CLI
 RUN mkdir -p -m 755 /etc/apt/keyrings \
-    && out=$(mktemp) && curl -fsSL -o $out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && out=$(mktemp) && curl -fsSL -o "$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && cat "$out" | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg\
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt-get update \
-    && apt-get install gh -y -q --no-install-recommends
+    && apt-get install gh -y -q --no-install-recommends \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # terraform
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list && \
     apt-get update && \
     apt-get install -y -q --no-install-recommends \
-    terraform
+    terraform && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # terraform CDK for C#
 RUN npm install --global cdktf-cli@0.21.0
@@ -138,11 +140,12 @@ RUN apt-get update -y && apt-get install -y -q --no-install-recommends python3-p
     printf 'if [ -f /usr/share/bash-completion/bash_completion ]; then\n  . /usr/share/bash-completion/bash_completion\nfi\n' >> /etc/bash.bashrc && \
     printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible)"; fi\n' >> /etc/bash.bashrc && \
     printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible-galaxy)"; fi\n' >> /etc/bash.bashrc && \
-    printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible-lint)"; fi\n' >> /etc/bash.bashrc
+    printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible-lint)"; fi\n' >> /etc/bash.bashrc && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # install uv
-ADD https://astral.sh/uv/0.8.17/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
+RUN curl -fsSL -o /uv-installer.sh https://astral.sh/uv/0.8.17/install.sh && \
+    sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 # LLM agents?
