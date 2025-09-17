@@ -71,7 +71,7 @@ RUN gcloud components install beta --quiet || true
 # Ansible configuration (fairly stable)
 RUN ansible-galaxy collection install community.general && \
     mkdir -p /etc/ansible && \
-    echo 'collections_paths = ~/.ansible/collections:/usr/share/ansible/collections' > /etc/ansible/ansible.cfg
+    printf '[defaults]\ncollections_paths = ~/.ansible/collections:/usr/share/ansible/collections\n' > /etc/ansible/ansible.cfg
 
 # Shell completions setup (stable)
 RUN printf '\n# Tool completions\n' >> /etc/bash.bashrc && \
