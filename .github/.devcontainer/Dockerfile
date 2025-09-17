@@ -13,6 +13,7 @@ RUN apt-get update -y && \
     curl \
     git \
     gnupg \
+    unzip \
     software-properties-common \
     xz-utils && \
     apt-get clean && \
@@ -29,12 +30,12 @@ RUN dotnet workload update && \
 #RUN dotnet new install Aspire.ProjectTemplates
 # avalonia templates
 RUN dotnet new install Avalonia.Templates
-# aspire cli
-# Download Aspire install script and execute
-RUN curl -fsSL -o /tmp/aspire-install.sh https://aspire.dev/install.sh && \
-    chmod +x /tmp/aspire-install.sh && \
-    bash /tmp/aspire-install.sh && \
-    rm /tmp/aspire-install.sh
+# Aspire CLI install disabled for now (script can be flaky in CI environments)
+# To re-enable later, prefer a pinned versioned install method.
+# RUN curl -fsSL -o /tmp/aspire-install.sh https://aspire.dev/install.sh && \
+#     chmod +x /tmp/aspire-install.sh && \
+#     bash /tmp/aspire-install.sh && \
+#     rm /tmp/aspire-install.sh
 
 # powershell core
 RUN apt-get update -y && \
