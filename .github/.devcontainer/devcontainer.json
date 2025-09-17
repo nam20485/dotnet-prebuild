@@ -4,13 +4,13 @@
   "name": "dotnet-prebuild-image",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   //"image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-noble",
-  // "image": "ghcr.io/nam20485/dotnet-prebuild:main-latest",
-  "build": {
-    // Path is relative to the devcontainer.json file.
-    "dockerfile": "Dockerfile",
-    "context": ".",
-    "cacheFrom": "ghcr.io/nam20485/dotnet-prebuild:latest"
-  },
+  "image": "ghcr.io/nam20485/dotnet-prebuild:main-latest",
+  // "build": {
+  //   // Path is relative to the devcontainer.json file.
+  //   "dockerfile": "Dockerfile",
+  //   "context": ".",
+  //   "cacheFrom": "ghcr.io/nam20485/dotnet-prebuild:latest"
+  // },
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     //"ghcr.io/devcontainers/features/node:1" : {},
