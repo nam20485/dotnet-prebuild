@@ -117,22 +117,14 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/* && \
     ansible --version
 
-# Ansible extras: ansible-lint (via pip) and community.general collection + bash completions
-RUN apt-get update -y && apt-get install -y -q --no-install-recommends python3-pip bash-completion && \
+# Ansible extras: ansible-lint (via pip) and community.general collection
+RUN apt-get update -y && \
+    apt-get install -y -q --no-install-recommends python3-pip && \
     pip3 install --no-cache-dir ansible-lint && \
-    ansible-galaxy collection install community.general && \
+    ansible-galaxy collection install community.general || true && \
     mkdir -p /etc/ansible && \
     echo 'collections_paths = ~/.ansible/collections:/usr/share/ansible/collections' > /etc/ansible/ansible.cfg && \
     ansible-lint --version && \
-    # Generate bash completion scripts
-    if command -v ansible >/dev/null 2>&1; then ansible-config dump --only-changed >/dev/null 2>&1 || true; fi && \
-    if command -v ansible >/dev/null 2>&1; then ansible localhost -m debug -a 'msg=completion-priming' >/dev/null 2>&1 || true; fi && \
-    # Add dynamic completion loader lines
-    printf '\n# Ansible & ansible-lint completion\n' >> /etc/bash.bashrc && \
-    printf 'if [ -f /usr/share/bash-completion/bash_completion ]; then\n  . /usr/share/bash-completion/bash_completion\nfi\n' >> /etc/bash.bashrc && \
-    printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible)"; fi\n' >> /etc/bash.bashrc && \
-    printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible-galaxy)"; fi\n' >> /etc/bash.bashrc && \
-    printf 'if command -v register-python-argcomplete >/dev/null 2>&1; then eval "$(register-python-argcomplete ansible-lint)"; fi\n' >> /etc/bash.bashrc && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # install uv
