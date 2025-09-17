@@ -49,28 +49,11 @@ RUN apt-get update -y && \
 # nerd fonts
 #RUN & ([scriptblock]::Create((iwr 'https://to.loredo.me/Install-NerdFont.ps1'))) -Confirm:$false -Name hack, heavy-data
 
-## Install nvm (Node Version Manager)
-ARG NVM_VERSION=v0.39.7
-ENV NVM_DIR=/usr/local/nvm
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN set -euo pipefail \
-    && curl -fsSL -o /tmp/nvm-install.sh https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh \
-    && NVM_DIR="$NVM_DIR" bash /tmp/nvm-install.sh \
-    && source "$NVM_DIR/nvm.sh" \
-    && nvm install --lts \
-    && nvm alias default 'lts/*' \
-    && NODE_VERSION="$(nvm current)" \
-    && ln -sf "$NVM_DIR/versions/node/${NODE_VERSION}/bin/node" /usr/local/bin/node \
-    && ln -sf "$NVM_DIR/versions/node/${NODE_VERSION}/bin/npm" /usr/local/bin/npm \
-    && ln -sf "$NVM_DIR/versions/node/${NODE_VERSION}/bin/npx" /usr/local/bin/npx \
-    && ln -sfn "$NVM_DIR/versions/node/${NODE_VERSION}/bin" /usr/local/node-bin \
-    && printf 'export NVM_DIR="%s"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n' "$NVM_DIR" > /etc/profile.d/nvm.sh \
-    && cat /etc/profile.d/nvm.sh >> /etc/bash.bashrc \
-    && rm -f /tmp/nvm-install.sh
-SHELL ["/bin/bash", "-c"]
-
-# Ensure global npm binaries are available on PATH (firebase, cdktf, etc.)
-ENV PATH=/usr/local/node-bin:$PATH
+# Install Node.js via NodeSource (stable and simpler in CI)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y -q --no-install-recommends nodejs && \
+    node --version && npm --version && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ### We don't need to install Node.js and npm separately since we're using nvm
 # # node / npm
