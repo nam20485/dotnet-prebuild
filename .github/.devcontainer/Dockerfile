@@ -71,7 +71,8 @@ RUN curl -fsSL https://bun.sh/install | bash && \
 
 # gcloud CLI (non-interactive install)
 ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
-RUN curl -fsSL https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz -o /tmp/google-cloud-sdk.tar.gz
+# Prefer ADD for remote fetch to avoid curl flakiness
+ADD https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz /tmp/google-cloud-sdk.tar.gz
 # Installing the package
 RUN mkdir -p /usr/local/gcloud \
     && tar -C /usr/local/gcloud -xzf /tmp/google-cloud-sdk.tar.gz \
@@ -127,9 +128,9 @@ RUN apt-get update -y && \
     ansible-lint --version && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# install uv
-RUN curl -fsSL -o /uv-installer.sh https://astral.sh/uv/0.8.17/install.sh && \
-    sh /uv-installer.sh && rm /uv-installer.sh
+# install uv (use ADD for installer)
+ADD https://astral.sh/uv/0.8.17/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 # LLM agents?
