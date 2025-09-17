@@ -9,11 +9,12 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install -y -q --no-install-recommends \
     build-essential \
-    apt-transport-https \
     ca-certificates \
-    gnupg2 \
     curl \
-    software-properties-common && \
+    git \
+    gnupg \
+    software-properties-common \
+    xz-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -37,7 +38,7 @@ RUN curl -fsSL -o /tmp/aspire-install.sh https://aspire.dev/install.sh && \
 
 # powershell core
 RUN apt-get update -y && \
-    apt-get install -y -q --no-install-recommends wget gpg apt-transport-https && \
+    apt-get install -y -q --no-install-recommends wget gpg && \
     wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb && \
     dpkg -i /tmp/packages-microsoft-prod.deb && \
     apt-get update -y && \
@@ -62,10 +63,14 @@ RUN set -euo pipefail \
     && ln -sf "$NVM_DIR/versions/node/${NODE_VERSION}/bin/node" /usr/local/bin/node \
     && ln -sf "$NVM_DIR/versions/node/${NODE_VERSION}/bin/npm" /usr/local/bin/npm \
     && ln -sf "$NVM_DIR/versions/node/${NODE_VERSION}/bin/npx" /usr/local/bin/npx \
+    && ln -sfn "$NVM_DIR/versions/node/${NODE_VERSION}/bin" /usr/local/node-bin \
     && printf 'export NVM_DIR="%s"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n' "$NVM_DIR" > /etc/profile.d/nvm.sh \
     && cat /etc/profile.d/nvm.sh >> /etc/bash.bashrc \
     && rm -f /tmp/nvm-install.sh
 SHELL ["/bin/bash", "-c"]
+
+# Ensure global npm binaries are available on PATH (firebase, cdktf, etc.)
+ENV PATH=/usr/local/node-bin:$PATH
 
 ### We don't need to install Node.js and npm separately since we're using nvm
 # # node / npm
@@ -80,12 +85,13 @@ RUN curl -fsSL https://bun.sh/install | bash && \
     ln -sf /root/.bun/bin/bun /usr/local/bin/bun && \
     bun --version
 
-# gcloud CLI
-RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+# gcloud CLI (non-interactive install)
+ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
+RUN curl -fsSL https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz -o /tmp/google-cloud-sdk.tar.gz
 # Installing the package
 RUN mkdir -p /usr/local/gcloud \
-    && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
-    && /usr/local/gcloud/google-cloud-sdk/install.sh
+    && tar -C /usr/local/gcloud -xzf /tmp/google-cloud-sdk.tar.gz \
+    && /usr/local/gcloud/google-cloud-sdk/install.sh --quiet
 ENV PATH=$PATH:/usr/local/gcloud/google-cloud-sdk/bin
 #RUN gcloud components update
 # beta components
