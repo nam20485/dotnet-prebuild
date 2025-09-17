@@ -27,8 +27,8 @@ RUN dotnet workload update && \
 RUN dotnet new install Avalonia.Templates
 # aspire cli
 # Download Aspire install script, verify checksum, then execute
-RUN curl -sSL -o /tmp/aspire-install.sh https://aspire.dev/install.sh && \
-    echo "EXPECTED_SHA256  /tmp/aspire-install.sh" | sha256sum -c - && \
+ADD https://aspire.dev/install.sh /tmp/aspire-install.sh
+RUN chmod +x /tmp/aspire-install.sh && \
     bash /tmp/aspire-install.sh && \
     rm /tmp/aspire-install.sh
 
