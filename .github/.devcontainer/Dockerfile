@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/dotnet:1.5.1-9.0-noble
+FROM mcr.microsoft.com/devcontainers/dotnet:1.5.4-9.0-noble
 
 # Ensure we have root privileges for package installs during build
 USER root
@@ -8,14 +8,21 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install -y -q --no-install-recommends \
-    build-essential \
-    ca-certificates \
-    curl \
-    git \
-    gnupg \
-    software-properties-common \
-    unzip \
-    xz-utils && \
+        build-essential \
+        ca-certificates \
+        curl \
+        git \
+        gnupg \
+        software-properties-common \
+        unzip \
+        jq \
+        apt-transport-https \
+        lsb-release \
+        wget \
+        unzip \
+        xz-utils \
+        python3 \
+        && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -27,15 +34,13 @@ RUN dotnet workload update && \
     dotnet workload install wasm-tools
 
 # aspire templates
-#RUN dotnet new install Aspire.ProjectTemplates
+RUN dotnet new install Aspire.ProjectTemplates
+
 # avalonia templates
 RUN dotnet new install Avalonia.Templates
-# Aspire CLI install disabled for now (script can be flaky in CI environments)
-# To re-enable later, prefer a pinned versioned install method.
-# RUN curl -fsSL -o /tmp/aspire-install.sh https://aspire.dev/install.sh && \
-#     chmod +x /tmp/aspire-install.sh && \
-#     bash /tmp/aspire-install.sh && \
-#     rm /tmp/aspire-install.sh
+
+# Aspire CLI - using dotnet tool install for reliability
+RUN dotnet tool install -g aspire --version 9.0.0
 
 # powershell core
 RUN apt-get update -y && \
@@ -133,12 +138,6 @@ ADD https://astral.sh/uv/0.8.17/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
-# LLM agents?
-# gemini CLI
-# augment
-# claude 
-# opencode
-
 # check CLI commands working
 RUN npm --version && \
     node --version && \
@@ -146,9 +145,10 @@ RUN npm --version && \
     gcloud --version && \
     firebase --version && \
     terraform --version && \
-    cdktf --version \
-    && ansible --version \
-    && uv --version
+    cdktf --version && \
+    ansible --version && \
+    uv --version && \
+    aspire --version
 
 # Return to non-root user for devcontainer usage
 USER vscode
