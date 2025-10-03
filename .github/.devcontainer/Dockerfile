@@ -55,7 +55,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 RUN apt-get update -y && \
     apt-get install -y -q --no-install-recommends \
     google-cloud-cli \
-    google-cloud-cli-beta \
     terraform \
     gh \
     ansible \
