@@ -72,9 +72,8 @@ RUN dotnet workload install wasm-tools && \
     dotnet tool install -g aspire.cli --version ${ASPIRE_VERSION} && \
     dotnet new install Avalonia.Templates
 
-# Static tool installations (less likely to change frequently)
-RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s -- "bun-v${BUN_VERSION}" && \
-    ln -sf /usr/local/bin/bun /usr/local/bin/bun
+    # Static tool installations (less likely to change frequently)
+RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s -- "bun-v${BUN_VERSION}"
 
 RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh && \
     ln -sf /root/.local/bin/uv /usr/local/bin/uv
