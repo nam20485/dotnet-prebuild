@@ -45,11 +45,6 @@ jobs:
           imageTag: latest, ${{ env.VERSION_IMAGE_TAG }}
           push: always
 
-      - name: Pull image for local digest extraction
-        env:
-          VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_IMAGE_TAG }}
-        run: docker pull ${{ env.VERSIONED_IMAGE_FULL }}
-
       - name: Output Image Digest
         id: get-image-digest
         env:
