@@ -55,6 +55,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 RUN apt-get update -y && \
     apt-get install -y -q --no-install-recommends \
     google-cloud-cli \
+    google-cloud-cli-beta \
     terraform \
     gh \
     ansible \
@@ -77,8 +78,6 @@ RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s -- "bun-v
 
 RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh && \
     ln -sf /root/.local/bin/uv /usr/local/bin/uv
-
-RUN gcloud components install beta --quiet
 
 # Ansible configuration (fairly stable)
 RUN ansible-galaxy collection install community.general && \
