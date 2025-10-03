@@ -44,13 +44,15 @@ jobs:
           imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           imageTag: ${{github.ref_name}}-latest, ${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
-          push: always
+          push: never
 
       - name: Push versioned image to registry
         env:
           VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
           LATEST_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-latest
         run: |
+          set -euo pipefail
+          # Push synchronously so RepoDigests are populated before signing
           docker push ${{ env.VERSIONED_IMAGE_FULL }}
           docker push ${{ env.LATEST_IMAGE_FULL }}
 

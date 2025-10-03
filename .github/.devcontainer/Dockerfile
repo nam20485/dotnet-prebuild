@@ -10,7 +10,6 @@ ARG ASPIRE_VERSION=9.5.0
 ARG AVALONIA_VERSION=11.2.2
 ARG BUN_VERSION=1.1.38
 ARG UV_VERSION=0.5.11
-ARG PYTHON_VERSION=3.12
 
 # Base system packages (least likely to change)
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
@@ -66,9 +65,9 @@ RUN apt-get update -y && \
 ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/root/.local/bin:$PATH"
 
 # .NET workloads (moderately stable - SDK updates)
-# Note: MAUI workload is not supported on Linux containers
+# Note: MAUI workload is not supported on Linux containers and skipping
+# dotnet workload update keeps build deterministic against the base image
 RUN dotnet workload install wasm-tools && \
-    dotnet workload update && \
     dotnet tool install -g aspire.cli --version ${ASPIRE_VERSION} && \
     dotnet new install Avalonia.Templates
 
@@ -91,9 +90,10 @@ RUN printf '\n# Tool completions\n' >> /etc/bash.bashrc && \
     done
 
 # NPM global packages (most likely to change versions frequently)
-RUN npm install -g firebase-tools@${FIREBASE_VERSION}
-
-RUN npm install --global cdktf-cli@${CDKTF_VERSION}
+RUN npm install -g \
+        firebase-tools@${FIREBASE_VERSION} \
+        cdktf-cli@${CDKTF_VERSION} && \
+    npm cache clean --force
 
 # Final verification (changes when tool versions change)
 RUN set -e; \
