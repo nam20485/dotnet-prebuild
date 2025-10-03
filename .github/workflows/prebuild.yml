@@ -22,7 +22,7 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-      security-events: write  # Required for uploading SARIF to Code Scanning
+      security-events: write # Required for uploading SARIF to Code Scanning
 
     runs-on: ubuntu-22.04
     steps:
@@ -43,21 +43,26 @@ jobs:
           subFolder: .github
           imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          imageTag: latest, ${{ env.VERSION_IMAGE_TAG }}
+          imageTag: ${{github.ref_name}}-latest, ${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
           push: always
 
       - name: Push versioned image to registry
+        env:
+          VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
+          LATEST_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-latest
         run: |
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.VERSIONED_IMAGE_FULL }}
+          docker push ${{ env.LATEST_IMAGE_FULL }}
 
       - name: Pull image for digest extraction
-        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_IMAGE_TAG }}
+        env:
+          VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
+        run: docker pull ${{ env.VERSIONED_IMAGE_FULL }}
 
       - name: Output Image Digest
         id: get-image-digest
         env:
-          VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_IMAGE_TAG }}
+          VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
         run: |
           FULL_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.VERSIONED_IMAGE_FULL }})
           DIGEST_ONLY=${FULL_DIGEST##*@}
@@ -94,8 +99,10 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.30.0
+        env:
+          VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_IMAGE_TAG }}
+          image-ref: ${{ env.VERSIONED_IMAGE_FULL }}
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
