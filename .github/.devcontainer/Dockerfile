@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG NODE_VERSION=22
 ARG FIREBASE_VERSION=14.6.0
 ARG CDKTF_VERSION=0.21.0
-ARG ASPIRE_VERSION=9.0.0
+ARG ASPIRE_VERSION=9.5.0
 ARG AVALONIA_VERSION=11.2.2
 ARG BUN_VERSION=1.1.38
 ARG UV_VERSION=0.5.11
@@ -69,7 +69,7 @@ ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/root/.local/bin:$PATH
 # Note: MAUI workload is not supported on Linux containers
 RUN dotnet workload install wasm-tools && \
     dotnet workload update && \
-    dotnet tool install -g aspire --version ${ASPIRE_VERSION} && \
+    dotnet tool install -g aspire.cli --version ${ASPIRE_VERSION} && \
     dotnet new install Avalonia.Templates
 
 # Static tool installations (less likely to change frequently)
