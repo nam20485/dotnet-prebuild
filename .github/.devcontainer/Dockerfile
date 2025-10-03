@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/devcontainers/dotnet:1.5.4-9.0-noble
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Version pinning for all tools
-ARG NODE_VERSION=22.12.0
+ARG NODE_VERSION=22
 ARG FIREBASE_VERSION=14.6.0
 ARG CDKTF_VERSION=0.21.0
 ARG ASPIRE_VERSION=9.0.0
@@ -66,8 +66,8 @@ RUN apt-get update -y && \
 ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/root/.local/bin:$PATH"
 
 # .NET workloads (moderately stable - SDK updates)
-RUN dotnet workload install maui && \
-    dotnet workload install wasm-tools && \
+# Note: MAUI workload is not supported on Linux containers
+RUN dotnet workload install wasm-tools && \
     dotnet workload update && \
     dotnet tool install -g aspire --version ${ASPIRE_VERSION} && \
     dotnet new install Avalonia.Templates
