@@ -45,6 +45,14 @@ jobs:
           imageTag: latest, ${{ env.VERSION_IMAGE_TAG }}
           push: always
 
+      - name: Push versioned image to registry
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_IMAGE_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Pull image for digest extraction
+        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_IMAGE_TAG }}
+
       - name: Output Image Digest
         id: get-image-digest
         env:
