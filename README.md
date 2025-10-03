@@ -9,16 +9,16 @@ Dev container image and automation for a full-stack .NET development environment
 - **Primary consumer**: `ghcr.io/nam20485/dotnet-prebuild:main-latest`
 
 ### Pinned toolchain
-| Tool | Version | Install Source |
-| --- | --- | --- |
-| .NET SDK | 9.0 (from base image) | Microsoft Dev Container base |
-| Node.js | 22.x | NodeSource APT repo |
-| Firebase CLI | 14.6.0 | npm global package |
-| CDK for Terraform (cdktf) | 0.21.0 | npm global package |
-| Aspire CLI | 9.5.0 | `dotnet tool install` |
-| Avalonia templates | 11.2.2 | `dotnet new install` |
-| Bun | 1.1.38 | Official install script |
-| uv | 0.5.11 | Astral install script |
+| Tool                                                     | Version                        | Install Source               |
+| -------------------------------------------------------- | ------------------------------ | ---------------------------- |
+| .NET SDK                                                 | 9.0 (from base image)          | Microsoft Dev Container base |
+| Node.js                                                  | 22.x                           | NodeSource APT repo          |
+| Firebase CLI                                             | 14.6.0                         | npm global package           |
+| CDK for Terraform (cdktf)                                | 0.21.0                         | npm global package           |
+| Aspire CLI                                               | 9.5.0                          | `dotnet tool install`        |
+| Avalonia templates                                       | 11.2.2                         | `dotnet new install`         |
+| Bun                                                      | 1.1.38                         | Official install script      |
+| uv                                                       | 0.5.11                         | Astral install script        |
 | Google Cloud CLI / Terraform / gh / Ansible / PowerShell | Latest from upstream APT repos |
 
 ### Additional configuration highlights

@@ -15,21 +15,21 @@ ARG UV_VERSION=0.5.11
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
     apt-get update -y && \
     apt-get install -y -q --no-install-recommends \
-        build-essential \
-        ca-certificates \
-        curl \
-        git \
-        gnupg2 \
-        software-properties-common \
-        unzip \
-        jq \
-        apt-transport-https \
-        lsb-release \
-        wget \
-        xz-utils \
-        python3 \
-        sshpass \
-        && \
+    build-essential \
+    ca-certificates \
+    curl \
+    git \
+    gnupg2 \
+    software-properties-common \
+    unzip \
+    jq \
+    apt-transport-https \
+    lsb-release \
+    wget \
+    xz-utils \
+    python3 \
+    sshpass \
+    && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -71,7 +71,7 @@ RUN dotnet workload install wasm-tools && \
     dotnet tool install -g aspire.cli --version ${ASPIRE_VERSION} && \
     dotnet new install Avalonia.Templates
 
-    # Static tool installations (less likely to change frequently)
+# Static tool installations (less likely to change frequently)
 RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s -- "bun-v${BUN_VERSION}"
 
 RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh && \
@@ -91,8 +91,8 @@ RUN printf '\n# Tool completions\n' >> /etc/bash.bashrc && \
 
 # NPM global packages (most likely to change versions frequently)
 RUN npm install -g \
-        firebase-tools@${FIREBASE_VERSION} \
-        cdktf-cli@${CDKTF_VERSION} && \
+    firebase-tools@${FIREBASE_VERSION} \
+    cdktf-cli@${CDKTF_VERSION} && \
     npm cache clean --force
 
 # Final verification (changes when tool versions change)
