@@ -22,6 +22,7 @@ jobs:
       packages: write
       id-token: write
       attestations: write
+      security-events: write  # Required for uploading SARIF to Code Scanning
 
     runs-on: ubuntu-22.04
     steps:
