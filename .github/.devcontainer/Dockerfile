@@ -2,6 +2,16 @@ FROM mcr.microsoft.com/devcontainers/dotnet:1.5.4-9.0-noble
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+# Version pinning for all tools
+ARG NODE_VERSION=22.12.0
+ARG FIREBASE_VERSION=14.6.0
+ARG CDKTF_VERSION=0.21.0
+ARG ASPIRE_VERSION=9.0.0
+ARG AVALONIA_VERSION=11.2.2
+ARG BUN_VERSION=1.1.38
+ARG UV_VERSION=0.5.11
+ARG PYTHON_VERSION=3.12
+
 # Base system packages (least likely to change)
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
     apt-get update -y && \
@@ -10,14 +20,13 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
         ca-certificates \
         curl \
         git \
-        gnupg \
+        gnupg2 \
         software-properties-common \
         unzip \
         jq \
         apt-transport-https \
         lsb-release \
         wget \
-        unzip \
         xz-utils \
         python3 \
         sshpass \
@@ -40,7 +49,7 @@ RUN dpkg -i /tmp/packages-microsoft-prod.deb && \
     rm /tmp/packages-microsoft-prod.deb
 
 # Node.js repository setup (stable versions)
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 
 # Install apt packages (grouped by stability)
 RUN apt-get update -y && \
@@ -54,22 +63,23 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Environment variables (stable)
-ENV PATH=$PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools
-ENV PATH="/root/.local/bin:$PATH"
+ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/root/.local/bin:$PATH"
 
 # .NET workloads (moderately stable - SDK updates)
-RUN dotnet workload update && \
-    dotnet tool install -g aspire --version 9.0.0 && \
+RUN dotnet workload install maui && \
+    dotnet workload install wasm-tools && \
+    dotnet workload update && \
+    dotnet tool install -g aspire --version ${ASPIRE_VERSION} && \
     dotnet new install Avalonia.Templates
 
 # Static tool installations (less likely to change frequently)
-RUN curl -fsSL https://bun.sh/install | bash && \
-    ln -sf /root/.bun/bin/bun /usr/local/bin/bun
+RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s -- "bun-v${BUN_VERSION}" && \
+    ln -sf /usr/local/bin/bun /usr/local/bin/bun
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh && \
     ln -sf /root/.local/bin/uv /usr/local/bin/uv
 
-RUN gcloud components install beta --quiet || true
+RUN gcloud components install beta --quiet
 
 # Ansible configuration (fairly stable)
 RUN ansible-galaxy collection install community.general && \
@@ -84,9 +94,9 @@ RUN printf '\n# Tool completions\n' >> /etc/bash.bashrc && \
     done
 
 # NPM global packages (most likely to change versions frequently)
-RUN npm install -g firebase-tools@14.6.0
+RUN npm install -g firebase-tools@${FIREBASE_VERSION}
 
-RUN npm install --global cdktf-cli@0.21.0
+RUN npm install --global cdktf-cli@${CDKTF_VERSION}
 
 # Final verification (changes when tool versions change)
 RUN set -e; \
@@ -101,3 +111,6 @@ RUN set -e; \
     ansible --version; \
     uv --version; \
     pwsh -v
+
+LABEL maintainer="your-email@example.com"
+LABEL version="1.0"
