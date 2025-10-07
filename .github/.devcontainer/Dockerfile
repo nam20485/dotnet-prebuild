@@ -29,6 +29,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
     xz-utils \
     python3 \
     sshpass \
+    sudo \
     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -62,7 +63,12 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Environment variables (stable)
-ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/root/.local/bin:$PATH"
+ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/home/vscode/.local/bin:$PATH"
+
+# Configure vscode user with sudo access
+RUN usermod -aG sudo vscode && \
+    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vscode && \
+    chmod 0440 /etc/sudoers.d/vscode
 
 # .NET workloads (moderately stable - SDK updates)
 # Note: MAUI workload is not supported on Linux containers and skipping
@@ -74,8 +80,12 @@ RUN dotnet workload install wasm-tools && \
 # Static tool installations (less likely to change frequently)
 RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s -- "bun-v${BUN_VERSION}"
 
+# Install uv for the vscode user
+USER vscode
 RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh && \
-    ln -sf /root/.local/bin/uv /usr/local/bin/uv
+    mkdir -p /home/vscode/.local/bin
+USER root
+RUN ln -sf /home/vscode/.local/bin/uv /usr/local/bin/uv
 
 # Ansible configuration (fairly stable)
 RUN ansible-galaxy collection install community.general && \
@@ -108,6 +118,10 @@ RUN set -e; \
     ansible --version; \
     uv --version; \
     pwsh -v
+
+# Switch to vscode user for development
+USER vscode
+WORKDIR /home/vscode
 
 LABEL maintainer="your-email@example.com"
 LABEL version="1.0"
