@@ -10,6 +10,7 @@ ARG ASPIRE_VERSION=9.5.0
 ARG AVALONIA_VERSION=11.2.2
 ARG BUN_VERSION=1.1.38
 ARG UV_VERSION=0.5.11
+ARG GRAPHITE_VERSION=1.4.6
 
 # Base system packages (least likely to change)
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
@@ -93,92 +94,23 @@ RUN ansible-galaxy collection install community.general && \
     printf '[defaults]\ncollections_paths = ~/.ansible/collections:/usr/share/ansible/collections\n' > /etc/ansible/ansible.cfg
 
 # Shell completions setup (stable)
-RUN printf '\n# Tool completions\n' >> /etc/bash.bashrc && \
-    printf 'if [ -f /usr/share/bash-completion/bash_completion ]; then . /usr/share/bash-completion/bash_completion; fi\n' >> /etc/bash.bashrc && \
-    # Ansible completions (argcomplete-based)
-    for c in ansible ansible-galaxy; do \
-    echo "if command -v register-python-argcomplete >/dev/null 2>&1; then eval \"\$(register-python-argcomplete $c)\"; fi" >> /etc/bash.bashrc; \
-    done && \
-    # dotnet CLI completions
-    printf '\n# dotnet completions\n' >> /etc/bash.bashrc && \
-    printf 'export DOTNET_CLI_TELEMETRY_OPTOUT=1\n' >> /etc/bash.bashrc && \
-    printf '_dotnet_bash_complete() {\n' >> /etc/bash.bashrc && \
-    printf '  local cur="${COMP_WORDS[COMP_CWORD]}" IFS=$'"'"'\\n'"'"'\n' >> /etc/bash.bashrc && \
-    printf '  local candidates=$(dotnet complete --position "${COMP_POINT}" "${COMP_LINE}" 2>/dev/null)\n' >> /etc/bash.bashrc && \
-    printf '  COMPREPLY=($(compgen -W "$candidates" -- "$cur"))\n' >> /etc/bash.bashrc && \
-    printf '}\n' >> /etc/bash.bashrc && \
-    printf 'complete -f -F _dotnet_bash_complete dotnet\n' >> /etc/bash.bashrc && \
-    # GitHub CLI completions
-    printf '\n# gh completions\n' >> /etc/bash.bashrc && \
-    printf 'if command -v gh >/dev/null 2>&1; then eval "$(gh completion -s bash)"; fi\n' >> /etc/bash.bashrc && \
-    # Google Cloud CLI completions
-    printf '\n# gcloud completions\n' >> /etc/bash.bashrc && \
-    printf 'if [ -f /usr/lib/google-cloud-sdk/completion.bash.inc ]; then . /usr/lib/google-cloud-sdk/completion.bash.inc; fi\n' >> /etc/bash.bashrc && \
-    # Terraform completions
-    printf '\n# terraform completions\n' >> /etc/bash.bashrc && \
-    printf 'if command -v terraform >/dev/null 2>&1; then complete -C /usr/bin/terraform terraform; fi\n' >> /etc/bash.bashrc && \
-    # npm completions
-    printf '\n# npm completions\n' >> /etc/bash.bashrc && \
-    printf 'if command -v npm >/dev/null 2>&1; then eval "$(npm completion 2>/dev/null)"; fi\n' >> /etc/bash.bashrc && \
-    # bun completions
-    printf '\n# bun completions\n' >> /etc/bash.bashrc && \
-    printf 'if command -v bun >/dev/null 2>&1; then\n' >> /etc/bash.bashrc && \
-    printf '  [ -s "/home/vscode/.bun/_bun" ] && . "/home/vscode/.bun/_bun"\n' >> /etc/bash.bashrc && \
-    printf 'fi\n' >> /etc/bash.bashrc && \
-    # uv completions
-    printf '\n# uv completions\n' >> /etc/bash.bashrc && \
-    printf 'if command -v uv >/dev/null 2>&1; then eval "$(uv generate-shell-completion bash)"; fi\n' >> /etc/bash.bashrc
+COPY setup-bash-completions.sh /tmp/
+RUN chmod +x /tmp/setup-bash-completions.sh && \
+    /tmp/setup-bash-completions.sh && \
+    rm /tmp/setup-bash-completions.sh
 
 # PowerShell profile setup for completions
-RUN mkdir -p /home/vscode/.config/powershell && \
-    printf '# PowerShell completions and settings\n' > /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf 'Set-PSReadLineOption -PredictionSource History\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf 'Set-PSReadLineOption -PredictionViewStyle ListView\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf 'Set-PSReadLineOption -EditMode Windows\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '# dotnet CLI completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf 'Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    param($commandName, $wordToComplete, $cursorPosition)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        [System.Management.Automation.CompletionResult]::new($_, $_, '"'"'ParameterValue'"'"', $_)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '# gh CLI completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf 'if (Get-Command gh -ErrorAction SilentlyContinue) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    Invoke-Expression -Command $(gh completion -s powershell | Out-String)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '# terraform completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf 'if (Get-Command terraform -ErrorAction SilentlyContinue) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    Register-ArgumentCompleter -Native -CommandName terraform -ScriptBlock {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        param($wordToComplete, $commandAst, $cursorPosition)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        $env:COMP_LINE = $commandAst.ToString()\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        $env:COMP_POINT = $cursorPosition\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        terraform | ForEach-Object {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '            [System.Management.Automation.CompletionResult]::new($_, $_, '"'"'ParameterValue'"'"', $_)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        Remove-Item Env:\\COMP_LINE, Env:\\COMP_POINT -ErrorAction SilentlyContinue\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '# git completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf 'if (Get-Command git -ErrorAction SilentlyContinue) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    Register-ArgumentCompleter -Native -CommandName git -ScriptBlock {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        param($wordToComplete, $commandAst, $cursorPosition)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        $gitCommands = @('"'"'add'"'"', '"'"'bisect'"'"', '"'"'branch'"'"', '"'"'checkout'"'"', '"'"'cherry-pick'"'"', '"'"'clone'"'"', '"'"'commit'"'"', '"'"'diff'"'"', '"'"'fetch'"'"', '"'"'grep'"'"', '"'"'init'"'"', '"'"'log'"'"', '"'"'merge'"'"', '"'"'mv'"'"', '"'"'pull'"'"', '"'"'push'"'"', '"'"'rebase'"'"', '"'"'reset'"'"', '"'"'restore'"'"', '"'"'revert'"'"', '"'"'rm'"'"', '"'"'show'"'"', '"'"'stash'"'"', '"'"'status'"'"', '"'"'switch'"'"', '"'"'tag'"'"')\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        $tokens = $commandAst.ToString() -split '"'"' '"'"'\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        if ($tokens.Count -eq 2) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '            $gitCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '                [System.Management.Automation.CompletionResult]::new($_, $_, '"'"'ParameterValue'"'"', $_)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '            }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '        }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '    }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
-    chown -R vscode:vscode /home/vscode/.config
+RUN mkdir -p /home/vscode/.config/powershell
+COPY Microsoft.PowerShell_profile.ps1 /home/vscode/.config/powershell/
+RUN chown -R vscode:vscode /home/vscode/.config
 
 
 
 # NPM global packages (most likely to change versions frequently)
 RUN npm install -g \
     firebase-tools@${FIREBASE_VERSION} \
-    cdktf-cli@${CDKTF_VERSION} && \
+    cdktf-cli@${CDKTF_VERSION} \
+    @withgraphite/graphite-cli@${GRAPHITE_VERSION} && \
     npm cache clean --force
 
 # Final verification (changes when tool versions change)
@@ -191,6 +123,7 @@ RUN set -e; \
     firebase --version; \
     terraform --version; \
     cdktf --version; \
+    gt --version; \
     ansible --version; \
     uv --version; \
     pwsh -v
