@@ -146,6 +146,18 @@ RUN mkdir -p /home/vscode/.config/powershell && \
     printf 'if (Get-Command gh -ErrorAction SilentlyContinue) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
     printf '    Invoke-Expression -Command $(gh completion -s powershell | Out-String)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
     printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '# terraform completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf 'if (Get-Command terraform -ErrorAction SilentlyContinue) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    Register-ArgumentCompleter -Native -CommandName terraform -ScriptBlock {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        param($wordToComplete, $commandAst, $cursorPosition)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        $env:COMP_LINE = $commandAst.ToString()\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        $env:COMP_POINT = $cursorPosition\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        terraform | ForEach-Object {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '            [System.Management.Automation.CompletionResult]::new($_, $_, '"'"'ParameterValue'"'"', $_)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        Remove-Item Env:\\COMP_LINE, Env:\\COMP_POINT -ErrorAction SilentlyContinue\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
     chown -R vscode:vscode /home/vscode/.config
 
 
