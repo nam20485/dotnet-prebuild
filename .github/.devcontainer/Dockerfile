@@ -158,6 +158,19 @@ RUN mkdir -p /home/vscode/.config/powershell && \
     printf '        Remove-Item Env:\\COMP_LINE, Env:\\COMP_POINT -ErrorAction SilentlyContinue\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
     printf '    }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
     printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '# git completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf 'if (Get-Command git -ErrorAction SilentlyContinue) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    Register-ArgumentCompleter -Native -CommandName git -ScriptBlock {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        param($wordToComplete, $commandAst, $cursorPosition)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        $gitCommands = @('"'"'add'"'"', '"'"'bisect'"'"', '"'"'branch'"'"', '"'"'checkout'"'"', '"'"'cherry-pick'"'"', '"'"'clone'"'"', '"'"'commit'"'"', '"'"'diff'"'"', '"'"'fetch'"'"', '"'"'grep'"'"', '"'"'init'"'"', '"'"'log'"'"', '"'"'merge'"'"', '"'"'mv'"'"', '"'"'pull'"'"', '"'"'push'"'"', '"'"'rebase'"'"', '"'"'reset'"'"', '"'"'restore'"'"', '"'"'revert'"'"', '"'"'rm'"'"', '"'"'show'"'"', '"'"'stash'"'"', '"'"'status'"'"', '"'"'switch'"'"', '"'"'tag'"'"')\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        $tokens = $commandAst.ToString() -split '"'"' '"'"'\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        if ($tokens.Count -eq 2) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '            $gitCommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '                [System.Management.Automation.CompletionResult]::new($_, $_, '"'"'ParameterValue'"'"', $_)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '            }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
     chown -R vscode:vscode /home/vscode/.config
 
 
