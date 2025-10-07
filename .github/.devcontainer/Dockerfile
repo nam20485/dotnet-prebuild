@@ -95,9 +95,60 @@ RUN ansible-galaxy collection install community.general && \
 # Shell completions setup (stable)
 RUN printf '\n# Tool completions\n' >> /etc/bash.bashrc && \
     printf 'if [ -f /usr/share/bash-completion/bash_completion ]; then . /usr/share/bash-completion/bash_completion; fi\n' >> /etc/bash.bashrc && \
+    # Ansible completions (argcomplete-based)
     for c in ansible ansible-galaxy; do \
     echo "if command -v register-python-argcomplete >/dev/null 2>&1; then eval \"\$(register-python-argcomplete $c)\"; fi" >> /etc/bash.bashrc; \
-    done
+    done && \
+    # dotnet CLI completions
+    printf '\n# dotnet completions\n' >> /etc/bash.bashrc && \
+    printf 'export DOTNET_CLI_TELEMETRY_OPTOUT=1\n' >> /etc/bash.bashrc && \
+    printf '_dotnet_bash_complete() {\n' >> /etc/bash.bashrc && \
+    printf '  local cur="${COMP_WORDS[COMP_CWORD]}" IFS=$'"'"'\\n'"'"'\n' >> /etc/bash.bashrc && \
+    printf '  local candidates=$(dotnet complete --position "${COMP_POINT}" "${COMP_LINE}" 2>/dev/null)\n' >> /etc/bash.bashrc && \
+    printf '  COMPREPLY=($(compgen -W "$candidates" -- "$cur"))\n' >> /etc/bash.bashrc && \
+    printf '}\n' >> /etc/bash.bashrc && \
+    printf 'complete -f -F _dotnet_bash_complete dotnet\n' >> /etc/bash.bashrc && \
+    # GitHub CLI completions
+    printf '\n# gh completions\n' >> /etc/bash.bashrc && \
+    printf 'if command -v gh >/dev/null 2>&1; then eval "$(gh completion -s bash)"; fi\n' >> /etc/bash.bashrc && \
+    # Google Cloud CLI completions
+    printf '\n# gcloud completions\n' >> /etc/bash.bashrc && \
+    printf 'if [ -f /usr/lib/google-cloud-sdk/completion.bash.inc ]; then . /usr/lib/google-cloud-sdk/completion.bash.inc; fi\n' >> /etc/bash.bashrc && \
+    # Terraform completions
+    printf '\n# terraform completions\n' >> /etc/bash.bashrc && \
+    printf 'if command -v terraform >/dev/null 2>&1; then complete -C /usr/bin/terraform terraform; fi\n' >> /etc/bash.bashrc && \
+    # npm completions
+    printf '\n# npm completions\n' >> /etc/bash.bashrc && \
+    printf 'if command -v npm >/dev/null 2>&1; then eval "$(npm completion 2>/dev/null)"; fi\n' >> /etc/bash.bashrc && \
+    # bun completions
+    printf '\n# bun completions\n' >> /etc/bash.bashrc && \
+    printf 'if command -v bun >/dev/null 2>&1; then\n' >> /etc/bash.bashrc && \
+    printf '  [ -s "/home/vscode/.bun/_bun" ] && . "/home/vscode/.bun/_bun"\n' >> /etc/bash.bashrc && \
+    printf 'fi\n' >> /etc/bash.bashrc && \
+    # uv completions
+    printf '\n# uv completions\n' >> /etc/bash.bashrc && \
+    printf 'if command -v uv >/dev/null 2>&1; then eval "$(uv generate-shell-completion bash)"; fi\n' >> /etc/bash.bashrc
+
+# PowerShell profile setup for completions
+RUN mkdir -p /home/vscode/.config/powershell && \
+    printf '# PowerShell completions and settings\n' > /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf 'Set-PSReadLineOption -PredictionSource History\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf 'Set-PSReadLineOption -PredictionViewStyle ListView\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf 'Set-PSReadLineOption -EditMode Windows\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '# dotnet CLI completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf 'Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    param($commandName, $wordToComplete, $cursorPosition)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '        [System.Management.Automation.CompletionResult]::new($_, $_, '"'"'ParameterValue'"'"', $_)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    }\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '# gh CLI completions\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf 'if (Get-Command gh -ErrorAction SilentlyContinue) {\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '    Invoke-Expression -Command $(gh completion -s powershell | Out-String)\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    printf '}\n' >> /home/vscode/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    chown -R vscode:vscode /home/vscode/.config
+
+
 
 # NPM global packages (most likely to change versions frequently)
 RUN npm install -g \
