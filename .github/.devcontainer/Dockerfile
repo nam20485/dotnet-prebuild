@@ -10,6 +10,7 @@ ARG ASPIRE_VERSION=9.5.0
 ARG AVALONIA_VERSION=11.2.2
 ARG BUN_VERSION=1.1.38
 ARG UV_VERSION=0.5.11
+ARG GRAPHITE_VERSION=1.4.6
 
 # Base system packages (least likely to change)
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
@@ -29,6 +30,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
     xz-utils \
     python3 \
     sshpass \
+    sudo \
     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -62,7 +64,12 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Environment variables (stable)
-ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/root/.local/bin:$PATH"
+ENV PATH="/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/home/vscode/.local/bin:$PATH"
+
+# Configure vscode user with sudo access
+RUN usermod -aG sudo vscode && \
+    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vscode && \
+    chmod 0440 /etc/sudoers.d/vscode
 
 # .NET workloads (moderately stable - SDK updates)
 # Note: MAUI workload is not supported on Linux containers and skipping
@@ -74,8 +81,12 @@ RUN dotnet workload install wasm-tools && \
 # Static tool installations (less likely to change frequently)
 RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s -- "bun-v${BUN_VERSION}"
 
+# Install uv for the vscode user
+USER vscode
 RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh && \
-    ln -sf /root/.local/bin/uv /usr/local/bin/uv
+    mkdir -p /home/vscode/.local/bin
+USER root
+RUN ln -sf /home/vscode/.local/bin/uv /usr/local/bin/uv
 
 # Ansible configuration (fairly stable)
 RUN ansible-galaxy collection install community.general && \
@@ -83,16 +94,23 @@ RUN ansible-galaxy collection install community.general && \
     printf '[defaults]\ncollections_paths = ~/.ansible/collections:/usr/share/ansible/collections\n' > /etc/ansible/ansible.cfg
 
 # Shell completions setup (stable)
-RUN printf '\n# Tool completions\n' >> /etc/bash.bashrc && \
-    printf 'if [ -f /usr/share/bash-completion/bash_completion ]; then . /usr/share/bash-completion/bash_completion; fi\n' >> /etc/bash.bashrc && \
-    for c in ansible ansible-galaxy; do \
-    echo "if command -v register-python-argcomplete >/dev/null 2>&1; then eval \"\$(register-python-argcomplete $c)\"; fi" >> /etc/bash.bashrc; \
-    done
+COPY setup-bash-completions.sh /tmp/
+RUN chmod +x /tmp/setup-bash-completions.sh && \
+    /tmp/setup-bash-completions.sh && \
+    rm /tmp/setup-bash-completions.sh
+
+# PowerShell profile setup for completions
+RUN mkdir -p /home/vscode/.config/powershell
+COPY Microsoft.PowerShell_profile.ps1 /home/vscode/.config/powershell/
+RUN chown -R vscode:vscode /home/vscode/.config
+
+
 
 # NPM global packages (most likely to change versions frequently)
 RUN npm install -g \
     firebase-tools@${FIREBASE_VERSION} \
-    cdktf-cli@${CDKTF_VERSION} && \
+    cdktf-cli@${CDKTF_VERSION} \
+    @withgraphite/graphite-cli@${GRAPHITE_VERSION} && \
     npm cache clean --force
 
 # Final verification (changes when tool versions change)
@@ -105,9 +123,14 @@ RUN set -e; \
     firebase --version; \
     terraform --version; \
     cdktf --version; \
+    gt --version; \
     ansible --version; \
     uv --version; \
     pwsh -v
 
-LABEL maintainer="your-email@example.com"
+# Switch to vscode user for development
+USER vscode
+WORKDIR /home/vscode
+
+LABEL maintainer="nmiller@intel-agency.com"
 LABEL version="1.0"
