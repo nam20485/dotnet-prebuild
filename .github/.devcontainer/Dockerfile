@@ -132,5 +132,5 @@ RUN set -e; \
 USER vscode
 WORKDIR /home/vscode
 
-LABEL maintainer="your-email@example.com"
+LABEL maintainer="nmiller@intel-agency.com"
 LABEL version="1.0"
