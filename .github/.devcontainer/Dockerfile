@@ -105,7 +105,6 @@ COPY Microsoft.PowerShell_profile.ps1 /home/vscode/.config/powershell/
 RUN chown -R vscode:vscode /home/vscode/.config
 
 
-
 # NPM global packages (most likely to change versions frequently)
 RUN npm install -g \
     firebase-tools@${FIREBASE_VERSION} \
