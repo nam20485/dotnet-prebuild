@@ -18,17 +18,28 @@
     //"ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     //"ghcr.io/devcontainers-extra/features/firebase-cli:2": {},
-    "ghcr.io/devcontainers/features/sshd:1": {}
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    }
   },
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [5000, 5001],
-  // "portsAttributes": {
-  // 		"5001": {
-  // 			"protocol": "https"
-  // 		}
-  // },
+  "forwardPorts": [
+    2222,
+    8080
+  ],
+  "portsAttributes": {
+    "2222": {
+      "label": "SSH",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "code-server",
+      "onAutoForward": "notify"
+    }
+  },
   // Use 'postCreateCommand' to run commands after the container is created.
-  //"postCreateCommand": "./scripts/onPostCreateCommand.ps1",
+  "postCreateCommand": "ide-backend-manager status",
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
