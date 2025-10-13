@@ -31,6 +31,11 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
     python3 \
     sshpass \
     sudo \
+    openssh-server \
+    libicu-dev \
+    libkrb5-dev \
+    zlib1g \
+    libssl-dev \
     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -99,10 +104,36 @@ RUN chmod +x /tmp/setup-bash-completions.sh && \
     /tmp/setup-bash-completions.sh && \
     rm /tmp/setup-bash-completions.sh
 
+# Copy IDE backend manager script
+COPY ide-backend-manager.sh /usr/local/bin/ide-backend-manager
+RUN chmod +x /usr/local/bin/ide-backend-manager
+
 # PowerShell profile setup for completions
 RUN mkdir -p /home/vscode/.config/powershell
 COPY Microsoft.PowerShell_profile.ps1 /home/vscode/.config/powershell/
 RUN chown -R vscode:vscode /home/vscode/.config
+
+# Install IDE backends for remote development
+# Install JetBrains Gateway backend dependencies
+RUN mkdir -p /opt/ide-backends && \
+    curl -L "https://download.jetbrains.com/idea/ideaIC-2024.2.4.tar.gz" -o /tmp/idea.tar.gz && \
+    tar -xzf /tmp/idea.tar.gz -C /opt/ide-backends && \
+    mv /opt/ide-backends/idea-IC-* /opt/ide-backends/idea && \
+    rm /tmp/idea.tar.gz && \
+    chown -R vscode:vscode /opt/ide-backends
+
+# Install code-server (VS Code in browser)
+RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+# Setup SSH for IDE backends
+RUN mkdir -p /run/sshd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
+# Add IDE backend environment variables
+ENV JETBRAINS_IDE_HOME=/opt/ide-backends/idea
+ENV PATH="${JETBRAINS_IDE_HOME}/bin:${PATH}"
 
 
 # NPM global packages (most likely to change versions frequently)
