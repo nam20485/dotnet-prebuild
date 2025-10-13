@@ -126,7 +126,7 @@ RUN mkdir -p /opt/ide-backends && \
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # Install VS Code Server CLI (for Remote-SSH and Tunnel)
-RUN curl -fsSL "https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64" -o /tmp/vscode-cli.tar.gz && \
+RUN curl -fsSL "https://code.visualstudio.com/sha/download?build=stable&os=cli-linux-x64" -o /tmp/vscode-cli.tar.gz && \
     tar -xzf /tmp/vscode-cli.tar.gz -C /usr/local/bin && \
     rm /tmp/vscode-cli.tar.gz && \
     chmod +x /usr/local/bin/code && \
