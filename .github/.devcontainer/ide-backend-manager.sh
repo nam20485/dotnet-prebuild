@@ -77,11 +77,13 @@ start_code_server() {
     
     print_info "Starting code-server..."
     print_info "Access it at: http://localhost:8080"
+    # Password is auto-generated on first run and stored in ~/.config/code-server/config.yaml
     code-server --bind-addr 0.0.0.0:8080 &
     sleep 2
     
     if check_code_server; then
         print_success "code-server started successfully"
+        print_info "Password is in: ~/.config/code-server/config.yaml"
     else
         print_error "Failed to start code-server"
         exit 1
