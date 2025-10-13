@@ -13,10 +13,18 @@
     //			"protocol": "https"
     //		}
     // }
+    // Mount GPG directory from host for commit signing (Option 1: Copy keys)
+    "mounts": [
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg-host,type=bind,consistency=cached"
+    ],
     // Use 'postCreateCommand' to run commands after the container is created.
-    // "postCreateCommand": "dotnet restore",
+    "postCreateCommand": "bash -c 'mkdir -p ~/.gnupg && chmod 700 ~/.gnupg && cp -r ~/.gnupg-host/* ~/.gnupg/ 2>/dev/null || true && chmod 600 ~/.gnupg/* 2>/dev/null || true && chmod 700 ~/.gnupg/private-keys-v1.d 2>/dev/null || true && echo \"GPG keys copied from host\" && gpg --list-keys 2>/dev/null || echo \"No GPG keys found\"'",
     // Configure tool-specific properties.
     // "customizations": {},
+    // Set GPG_TTY for proper GPG agent communication
+    "remoteEnv": {
+        "GPG_TTY": "$(tty)"
+    },
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     "remoteUser": "vscode",
     "containerUser": "vscode"
