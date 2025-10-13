@@ -15,16 +15,22 @@ This document summarizes the changes made to add IDE backends and enhance SSH su
 
 #### Added IDE Backends
 
-**JetBrains IDEA Community Backend:**
-- Downloaded and installed IntelliJ IDEA Community Edition (2024.2.4)
-- Installed to `/opt/ide-backends/idea`
-- Added environment variable `JETBRAINS_IDE_HOME=/opt/ide-backends/idea`
+**JetBrains Rider Backend:**
+- Downloaded and installed JetBrains Rider (2024.2.7)
+- Installed to `/opt/ide-backends/rider`
+- Added environment variable `JETBRAINS_IDE_HOME=/opt/ide-backends/rider`
 - Added to PATH for easy access
+- Optimized for .NET development
 
 **Code-Server:**
 - Installed code-server (VS Code in browser)
 - Accessible on port 8080
 - Can be started with: `code-server --bind-addr 0.0.0.0:8080`
+
+**VS Code Server:**
+- Installed VS Code CLI for Remote-SSH connections
+- Allows connecting from local VS Code using Remote-SSH extension
+- No additional port required (uses SSH port 2222)
 
 #### SSH Configuration
 - Created `/run/sshd` directory
@@ -71,7 +77,8 @@ Helper script with commands:
 - `stop-ssh` - Stop SSH only
 - `start-code` - Start code-server only
 - `stop-code` - Stop code-server only
-- `check-jetbrains` - Check JetBrains installation
+- `check-jetbrains` - Check JetBrains Rider installation
+- `check-vscode` - Check VS Code Server CLI installation
 
 ## How to Use
 
@@ -109,18 +116,24 @@ ssh -p 2222 vscode@localhost
 #### Via code-server (Browser):
 Open your browser to: `http://localhost:8080`
 
-#### Via JetBrains Gateway:
+#### Via VS Code Remote-SSH:
+1. Install "Remote - SSH" extension in local VS Code
+2. Press F1 → "Remote-SSH: Connect to Host..."
+3. Enter: `ssh vscode@localhost -p 2222`
+
+#### Via JetBrains Gateway (Rider):
 1. Open JetBrains Gateway
 2. Select "Connect via SSH"
 3. Use: `ssh://vscode@localhost:2222`
 
 ## Benefits
 
-1. **Multiple IDE Options**: Use VS Code, JetBrains IDEs, or browser-based code-server
+1. **Multiple IDE Options**: Use VS Code (local or browser), JetBrains Rider, or browser-based code-server
 2. **Remote Development**: Access your development environment from anywhere
 3. **Team Collaboration**: Share the same development environment configuration
 4. **Flexible Workflows**: Choose the IDE that works best for your task
 5. **Easy Management**: Simple commands to control all backends
+6. **.NET Optimized**: Rider backend provides excellent .NET development experience
 
 ## Security Considerations
 
@@ -135,8 +148,9 @@ Open your browser to: `http://localhost:8080`
 1. Rebuild the container to apply changes
 2. Test SSH connection
 3. Try code-server in browser
-4. (Optional) Set up JetBrains Gateway
-5. (Optional) Configure SSH key authentication for better security
+4. (Optional) Connect with VS Code Remote-SSH extension
+5. (Optional) Set up JetBrains Gateway with Rider
+6. (Optional) Configure SSH key authentication for better security
 
 ## Documentation
 

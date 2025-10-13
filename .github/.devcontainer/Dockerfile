@@ -114,16 +114,23 @@ COPY Microsoft.PowerShell_profile.ps1 /home/vscode/.config/powershell/
 RUN chown -R vscode:vscode /home/vscode/.config
 
 # Install IDE backends for remote development
-# Install JetBrains Gateway backend dependencies
+# Install JetBrains Rider backend for Gateway
 RUN mkdir -p /opt/ide-backends && \
-    curl -L "https://download.jetbrains.com/idea/ideaIC-2024.2.4.tar.gz" -o /tmp/idea.tar.gz && \
-    tar -xzf /tmp/idea.tar.gz -C /opt/ide-backends && \
-    mv /opt/ide-backends/idea-IC-* /opt/ide-backends/idea && \
-    rm /tmp/idea.tar.gz && \
+    curl -L "https://download.jetbrains.com/rider/JetBrains.Rider-2024.2.7.tar.gz" -o /tmp/rider.tar.gz && \
+    tar -xzf /tmp/rider.tar.gz -C /opt/ide-backends && \
+    mv /opt/ide-backends/JetBrains\ Rider-* /opt/ide-backends/rider && \
+    rm /tmp/rider.tar.gz && \
     chown -R vscode:vscode /opt/ide-backends
 
 # Install code-server (VS Code in browser)
 RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+# Install VS Code Server CLI (for Remote-SSH and Tunnel)
+RUN curl -fsSL "https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64" -o /tmp/vscode-cli.tar.gz && \
+    tar -xzf /tmp/vscode-cli.tar.gz -C /usr/local/bin && \
+    rm /tmp/vscode-cli.tar.gz && \
+    chmod +x /usr/local/bin/code && \
+    chown vscode:vscode /usr/local/bin/code
 
 # Setup SSH for IDE backends
 RUN mkdir -p /run/sshd && \
@@ -132,7 +139,7 @@ RUN mkdir -p /run/sshd && \
     sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 
 # Add IDE backend environment variables
-ENV JETBRAINS_IDE_HOME=/opt/ide-backends/idea
+ENV JETBRAINS_IDE_HOME=/opt/ide-backends/rider
 ENV PATH="${JETBRAINS_IDE_HOME}/bin:${PATH}"
 
 

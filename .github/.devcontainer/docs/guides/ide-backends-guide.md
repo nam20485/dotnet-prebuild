@@ -31,17 +31,49 @@ Code-server provides a full VS Code experience in your browser.
 code-server --bind-addr 0.0.0.0:8080 --auth password
 ```
 
-### 3. **JetBrains Gateway Support**
-IntelliJ IDEA Community backend is installed for JetBrains Gateway connections.
+### 3. **VS Code Remote-SSH**
+VS Code Server is installed for connecting with the Remote-SSH extension from your local VS Code.
 
-- **Location**: `/opt/ide-backends/idea`
+- **Connection**: Use VS Code Remote-SSH extension
+- **Host**: `vscode@localhost`
+- **Port**: 2222
+
+**Steps to connect with VS Code Remote-SSH:**
+1. Install the "Remote - SSH" extension in your local VS Code
+2. Press `F1` and select "Remote-SSH: Connect to Host..."
+3. Enter: `ssh vscode@localhost -p 2222`
+4. VS Code will connect and install the server automatically
+
+### 4. **VS Code Tunnel**
+VS Code CLI with tunnel support allows you to connect from anywhere using vscode.dev or your local VS Code.
+
+- **Start Command**: 
+  ```bash
+  code tunnel --accept-server-license-terms
+  ```
+  Or use: `ide-backend-manager start-tunnel`
+- **Access**: Via vscode.dev or local VS Code using the tunnel URL
+
+**Steps to use VS Code Tunnel:**
+1. Start the tunnel: `ide-backend-manager start-tunnel`
+2. On first run, authenticate via browser
+3. Get the connection URL from `/tmp/vscode-tunnel.log`
+4. Open vscode.dev or your local VS Code
+5. Connect using the provided tunnel name/URL
+
+**Note**: The tunnel creates a secure connection without needing port forwarding or SSH access.
+
+### 5. **JetBrains Rider Gateway**
+JetBrains Rider backend is installed for JetBrains Gateway connections, optimized for .NET development.
+
+- **Location**: `/opt/ide-backends/rider`
 - **Usage**: Connect via JetBrains Gateway using SSH
 
 **Steps to connect with JetBrains Gateway:**
 1. Open JetBrains Gateway
 2. Select "Connect via SSH"
 3. Use connection details: `ssh://vscode@localhost:2222`
-4. Gateway will automatically detect and use the installed backend
+4. Gateway will automatically detect and use the installed Rider backend
 
 ## Port Forwarding
 
@@ -51,6 +83,10 @@ The following ports are automatically forwarded:
 | ---- | ----------- | ---------------------------- |
 | 2222 | SSH         | SSH server for remote access |
 | 8080 | code-server | VS Code in browser           |
+
+**Note**: 
+- VS Code Remote-SSH and JetBrains Gateway both use the SSH port (2222) and don't require additional ports.
+- VS Code Tunnel doesn't require port forwarding - it creates a secure tunnel through VS Code's infrastructure.
 
 ## Security Notes
 
@@ -98,13 +134,30 @@ To add more IDE backends or modify the configuration:
 - Check port 8080 is available: `netstat -tuln | grep 8080`
 - View logs: `code-server --bind-addr 0.0.0.0:8080 --verbose`
 
+### VS Code Remote-SSH Issues
+- Ensure SSH connection works first: `ssh -p 2222 vscode@localhost`
+- Check VS Code Remote-SSH extension is installed
+- Try removing and re-adding the SSH host
+- Check VS Code logs: View → Output → Remote-SSH
+
+### VS Code Tunnel Issues
+- Check if tunnel is running: `ide-backend-manager check-tunnel`
+- View tunnel logs: `cat /tmp/vscode-tunnel.log`
+- Restart tunnel: `ide-backend-manager stop-tunnel && ide-backend-manager start-tunnel`
+- Manual start: `code tunnel --accept-server-license-terms`
+- Check authentication status and re-authenticate if needed
+
 ### JetBrains Gateway Issues
-- Verify IDEA backend is installed: `ls -la /opt/ide-backends/idea`
+- Verify Rider backend is installed: `ls -la /opt/ide-backends/rider`
 - Check SSH connection works first
 - Ensure Gateway has the latest version
+- Clear Gateway cache if needed
 
 ## Additional Resources
 
 - [VS Code Remote Development](https://code.visualstudio.com/docs/remote/remote-overview)
-- [JetBrains Gateway Documentation](https://www.jetbrains.com/help/idea/remote-development-overview.html)
+- [VS Code Remote-SSH](https://code.visualstudio.com/docs/remote/ssh)
+- [VS Code Remote Tunnels](https://code.visualstudio.com/docs/remote/tunnels)
+- [JetBrains Gateway Documentation](https://www.jetbrains.com/help/rider/remote-development-overview.html)
+- [JetBrains Rider](https://www.jetbrains.com/rider/)
 - [code-server Documentation](https://coder.com/docs/code-server/latest)

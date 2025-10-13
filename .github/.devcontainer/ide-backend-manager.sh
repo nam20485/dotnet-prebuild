@@ -95,13 +95,61 @@ stop_code_server() {
 }
 
 check_jetbrains() {
-    if [ -d "/opt/ide-backends/idea" ]; then
-        print_success "JetBrains IDEA backend is installed at /opt/ide-backends/idea"
+    if [ -d "/opt/ide-backends/rider" ]; then
+        print_success "JetBrains Rider backend is installed at /opt/ide-backends/rider"
         return 0
     else
-        print_error "JetBrains IDEA backend is not installed"
+        print_error "JetBrains Rider backend is not installed"
         return 1
     fi
+}
+
+check_vscode_server() {
+    if command -v code > /dev/null 2>&1; then
+        print_success "VS Code Server CLI is installed"
+        return 0
+    else
+        print_error "VS Code Server CLI is not installed"
+        return 1
+    fi
+}
+
+check_vscode_tunnel() {
+    if pgrep -f "code tunnel" > /dev/null; then
+        print_success "VS Code tunnel is running"
+        return 0
+    else
+        print_error "VS Code tunnel is not running"
+        return 1
+    fi
+}
+
+start_vscode_tunnel() {
+    if check_vscode_tunnel; then
+        print_info "VS Code tunnel is already running"
+        return 0
+    fi
+    
+    print_info "Starting VS Code tunnel..."
+    print_info "You may need to authenticate via browser on first run"
+    print_info "Use: code tunnel --accept-server-license-terms"
+    nohup code tunnel --accept-server-license-terms > /tmp/vscode-tunnel.log 2>&1 &
+    sleep 3
+    
+    if check_vscode_tunnel; then
+        print_success "VS Code tunnel started successfully"
+        print_info "Check connection details in /tmp/vscode-tunnel.log"
+    else
+        print_error "Failed to start VS Code tunnel"
+        print_info "Try running manually: code tunnel --accept-server-license-terms"
+        exit 1
+    fi
+}
+
+stop_vscode_tunnel() {
+    print_info "Stopping VS Code tunnel..."
+    pkill -f "code tunnel" || true
+    print_success "VS Code tunnel stopped"
 }
 
 status_all() {
@@ -113,17 +161,26 @@ status_all() {
     check_ssh || true
     echo ""
     
-    echo "Code-Server:"
+    echo "Code-Server (VS Code in Browser):"
     check_code_server || true
     echo ""
     
-    echo "JetBrains IDEA Backend:"
+    echo "VS Code Server (Remote-SSH):"
+    check_vscode_server || true
+    echo ""
+    
+    echo "VS Code Tunnel:"
+    check_vscode_tunnel || true
+    echo ""
+    
+    echo "JetBrains Rider Backend:"
     check_jetbrains || true
     echo ""
     
     echo -e "${BLUE}Port Forwarding:${NC}"
     echo "  - SSH: localhost:2222"
     echo "  - code-server: http://localhost:8080"
+    echo "  - VS Code tunnel: Check /tmp/vscode-tunnel.log for connection URL"
     echo ""
 }
 
@@ -138,11 +195,16 @@ start_all() {
     start_code_server
     echo ""
     
+    start_vscode_tunnel
+    echo ""
+    
     print_success "All IDE backends started!"
     echo ""
     print_info "Access methods:"
     echo "  - SSH: ssh -p 2222 vscode@localhost"
-    echo "  - code-server: http://localhost:8080"
+    echo "  - code-server (browser): http://localhost:8080"
+    echo "  - VS Code Remote-SSH: Configure Remote-SSH to vscode@localhost:2222"
+    echo "  - VS Code Tunnel: Check /tmp/vscode-tunnel.log for connection URL"
     echo "  - JetBrains Gateway: Configure SSH to vscode@localhost:2222"
 }
 
@@ -155,6 +217,9 @@ stop_all() {
     echo ""
     
     stop_code_server
+    echo ""
+    
+    stop_vscode_tunnel
     echo ""
     
     print_success "All IDE backends stopped!"
@@ -173,7 +238,11 @@ Commands:
   stop-ssh        Stop SSH server only
   start-code      Start code-server only
   stop-code       Stop code-server only
-  check-jetbrains Check JetBrains backend installation
+  start-tunnel    Start VS Code tunnel only
+  stop-tunnel     Stop VS Code tunnel only
+  check-jetbrains Check JetBrains Rider backend installation
+  check-vscode    Check VS Code Server CLI installation
+  check-tunnel    Check VS Code tunnel status
   help            Show this help message
 
 Examples:
@@ -207,8 +276,20 @@ case "${1:-status}" in
     stop-code)
         stop_code_server
         ;;
+    start-tunnel)
+        start_vscode_tunnel
+        ;;
+    stop-tunnel)
+        stop_vscode_tunnel
+        ;;
     check-jetbrains)
         check_jetbrains
+        ;;
+    check-vscode)
+        check_vscode_server
+        ;;
+    check-tunnel)
+        check_vscode_tunnel
         ;;
     help|--help|-h)
         show_help
