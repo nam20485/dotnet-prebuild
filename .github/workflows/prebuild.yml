@@ -101,7 +101,7 @@ jobs:
           df -h
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.35.0
         env:
           VERSIONED_IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{github.ref_name}}-${{ env.VERSION_IMAGE_TAG }}
         with:
